@@ -1,57 +1,114 @@
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
-
-function App() {
+import Hampi from './pages/hampi.jsx'
+import Egypt from './pages/Egypt.jsx'
+import Rome from './pages/Rome.jsx'
+import { Routes, Route, Link, NavLink } from 'react-router-dom'
+import Login from "./pages/login.jsx";
+function Home() {
   const [search, setSearch] = useState('')
   const [showHampi, setShowHampi] = useState(false)
   const [showEgypt, setShowEgypt] = useState(false)
   const [showRome, setShowRome] = useState(false)
+  const [activeTab, setActiveTab] = useState("hampi")
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMessage, setChatMessage] = useState('')
 const [chatHistory, setChatHistory] = useState([])
+const [isLoading, setIsLoading] = useState(false)
+const [loginOpen, setLoginOpen] = useState(false)
+const [isSignup, setIsSignup] = useState(false);
+const chatBodyRef = useRef(null)
+const destinationGridRef = useRef(null)
 
-const sendMessage = () => {
-  const question = chatMessage.trim().toLowerCase()
+const handleDestinationScroll = () => {
+  const grid = destinationGridRef.current;
+  if (!grid) return;
 
-  if (!question) return
+  const cards = grid.querySelectorAll(".destination-card");
+  const gridCenter = grid.getBoundingClientRect().left + grid.clientWidth / 2;
 
-  let answer = ''
+  let closestCard = null;
+  let closestDistance = Infinity;
 
-  if (question.includes('hampi')) {
-    answer =
-      'Hampi, Karnataka mein sthit hai. 🏛️ It was the capital of the Vijayanagara Empire and is famous for its ancient temples and stone chariot.'
-  } else if (
-    question.includes('egypt') ||
-    question.includes('pyramid') ||
-    question.includes('pharaoh')
-  ) {
-    answer =
-      'Ancient Egypt was famous for its pyramids, pharaohs, hieroglyphics, and the Nile River. The Pyramids of Giza are among its most famous monuments. 🔺'
-  } else if (
-    question.includes('rome') ||
-    question.includes('roman')
-  ) {
-    answer =
-      'The Roman Empire was known for its roads, aqueducts, laws, and grand monuments such as the Colosseum. 🏛️'
-  } else if (
-    question.includes('hello') ||
-    question.includes('hi')
-  ) {
-    answer =
-      'Hello! 👋 Welcome to TIMELOOP. Ask me about Hampi, Ancient Egypt, or the Roman Empire.'
-  } else {
-    answer =
-      'That is an interesting history question! Currently, I can answer basic questions about Hampi, Ancient Egypt, and the Roman Empire. Try asking about one of these topics. ⌛'
+  cards.forEach((card) => {
+    const rect = card.getBoundingClientRect();
+    const cardCenter = rect.left + rect.width / 2;
+    const distance = Math.abs(gridCenter - cardCenter);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestCard = card;
+    }
+  });
+
+  if (closestCard) {
+    if (closestCard.classList.contains("hampi")) {
+      setActiveTab("hampi");
+    } else if (closestCard.classList.contains("egypt")) {
+      setActiveTab("egypt");
+    } else if (closestCard.classList.contains("rome")) {
+      setActiveTab("rome");
+    }
   }
+};
+
+useEffect(() => {
+  if (chatBodyRef.current) {
+    chatBodyRef.current.scrollTop =
+      chatBodyRef.current.scrollHeight
+  }
+}, [chatHistory, isLoading])
+
+
+const sendMessage = async () => {
+  const question = chatMessage.trim()
+
+  if (!question || isLoading) return
 
   setChatHistory((previous) => [
     ...previous,
-    { role: 'user', text: chatMessage.trim() },
-    { role: 'ai', text: answer },
+    { role: 'user', text: question },
   ])
 
   setChatMessage('')
+  setIsLoading(true)
+  
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Server error')
+    }
+
+    const data = await response.json()
+
+    setChatHistory((previous) => [
+      ...previous,
+      {
+        role: 'ai',
+        text: data.answer || 'No answer received.',
+        sources: data.sources || [],
+      },
+    ])
+  } catch (error) {
+    setChatHistory((previous) => [
+      ...previous,
+      {
+        role: 'ai',
+        text: 'History AI server is not connected yet. Please try again when the backend is ready.',
+      },
+    ])
+  } finally {
+    setIsLoading(false)
+  }
 }
 
 
@@ -85,9 +142,31 @@ const sendMessage = () => {
 
 
     
-<div className="chat-body">
+<div className="chat-body" ref={chatBodyRef}>
   <p>Hi! 👋 Ask me anything about history.</p>
   <p>Try asking about Hampi, Egypt, or Rome!</p>
+  
+{chatHistory.length === 0 && (
+  <div className="quick-questions">
+  <button onClick={() => {
+    setChatMessage('Tell me about Hampi')
+  }}>
+    🏛️ Hampi
+  </button>
+
+  <button onClick={() => {
+    setChatMessage('Tell me about Ancient Egypt')
+  }}>
+    🔺 Ancient Egypt
+  </button>
+
+  <button onClick={() => {
+    setChatMessage('Tell me about the Roman Empire')
+  }}>
+    🏺 Roman Empire
+  </button>
+</div>
+)}
 
   {chatHistory.map((message, index) => (
     <div
@@ -97,20 +176,31 @@ const sendMessage = () => {
       {message.text}
     </div>
   ))}
+{isLoading && (
+  <div className="ai-message">
+    <span className="thinking-dots">
+      History AI is thinking
+      <span> ···</span>
+    </span>
+  </div>
+)}
 </div>
 
 
     
 <div className="chat-input">
   <input
-    value={chatMessage}
-    onChange={(e) => setChatMessage(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter') sendMessage()
-    }}
-    placeholder="Ask about history..."
-  />
-  <button onClick={sendMessage}>➤</button>
+  value={chatMessage}
+  onChange={(e) => setChatMessage(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' && !isLoading) sendMessage()
+  }}
+  placeholder="Ask about history..."
+  disabled={isLoading}
+/>
+  <button onClick={sendMessage} disabled={isLoading}>
+  {isLoading ? '⏳' : '➤'}
+</button>
 </div>
 
   </div>
@@ -122,9 +212,113 @@ const sendMessage = () => {
           <a href="#home">Home</a>
           <a href="#explore">Explore</a>
           <a href="#about">About</a>
+          <button
+  type="button"
+  className="login-nav-button"
+  onClick={() => setLoginOpen(true)}
+>
+  Login
+</button>
         </div>
         <a href="#explore">Start Exploring ↗</a>
       </nav>
+      
+{loginOpen && (
+  <div
+    className="login-modal-overlay"
+    onClick={() => setLoginOpen(false)}
+  >
+    <div
+      className="login-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="login-modal-close"
+        onClick={() => setLoginOpen(false)}
+      >
+        ×
+      </button>
+
+      <p className="login-modal-label">WELCOME TO TIMELOOP</p>
+      <h2>Welcome, Explorer!</h2>
+      <p className="login-modal-text">
+        Sign in to continue your journey through history.
+      </p>
+
+      <form
+  onSubmit={(e) => {
+    e.preventDefault();
+    setLoginOpen(false);
+  }}
+>
+        <label>
+          Email address
+          <input
+            type="email"
+            placeholder="you@example.com"
+            required
+          />
+        </label>
+
+        <label>
+          Password
+          <input
+            type="password"
+            placeholder="Enter your password"
+            required
+          />
+        </label>
+         {!isSignup && (
+  <div style={{ textAlign: "right", margin: "8px 0 16px" }}>
+    <button
+      type="button"
+      style={{
+        background: "transparent",
+        border: "none",
+        color: "#e0bd7e",
+        cursor: "pointer",
+        fontSize: "13px"
+      }}
+      onClick={() => {
+        const email = document.querySelector(
+          ".login-modal input[type='email']"
+        )?.value;
+
+        if (!email) {
+          alert("Please enter your email address first.");
+          return;
+        }
+
+        alert(
+          "Password reset instructions will be available once the backend is connected."
+        );
+      }}
+    >
+      Forgot Password?
+    </button>
+  </div>
+)}
+        <button type="submit" className="login-modal-submit">
+  {isSignup ? "Create Account →" : "Sign In →"}
+</button>
+      </form>
+
+      <p className="login-modal-footer">
+  {isSignup ? "Already have an account? " : "New to TIMELOOP? "}
+
+  <button
+    type="button"
+    className="signup-link"
+    onClick={() => setIsSignup(!isSignup)}
+  >
+    {isSignup ? "Sign in" : "Create an account"}
+  </button>
+</p>
+    </div>
+  </div>
+)}
+
 
       <section className="hero" id="home">
         <div>
@@ -160,40 +354,75 @@ const sendMessage = () => {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+  if (e.key === 'Enter') {
+    document.querySelector('.search-bar button')?.click()
+  }
+}}
             placeholder="Search Hampi, Egypt, Roman Empire..."
           />
-          <button
+       <button
   onClick={() => {
     const destination = search.toLowerCase().trim()
+    const normalizedSearch = destination
+  .replace(/[^\w\s]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
 
     if (!destination) {
-      alert('Please enter a destination')
+      alert("Please enter a destination")
       return
     }
 
-    const cards = document.querySelectorAll('.destination-card')
-    const card = [...cards].find((item) =>
-      (
-  item.innerText.toLowerCase().includes(destination) ||
-  (destination.includes('pyramid') &&
-    item.innerText.toLowerCase().includes('egypt')) ||
-  (destination.includes('rome') &&
-    item.innerText.toLowerCase().includes('roman empire'))
-)
-    )
-
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    } else {
-      alert('Destination not found. Try Hampi, Egypt, or Rome.')
-    }
+   if (
+  normalizedSearch.includes("hampi") ||
+  normalizedSearch.includes("temple")
+) {
+  window.location.href = "/hampi"
+} else if (
+  normalizedSearch.includes("egypt") ||
+  normalizedSearch.includes("pyramid") ||
+  normalizedSearch.includes("pharaoh")
+) {
+  window.location.href = "/egypt"
+} else if (
+  normalizedSearch.includes("rome") ||
+  normalizedSearch.includes("roman") ||
+  normalizedSearch.includes("colosseum")
+) {
+  window.location.href = "/rome"
+} else {
+  alert("Destination not found. Try Hampi, Egypt, or Rome.")
+}
   }}
 >
   Explore ↗
 </button>
         </div>
 
-        <div className="destination-grid">
+
+<div className="destination-tabs">
+  <Link
+    to={`/${activeTab === "hampi" ? "hampi" : activeTab === "egypt" ? "egypt" : "rome"}`}
+    className="active"
+  >
+    {activeTab === "hampi"
+      ? "Hampi"
+      : activeTab === "egypt"
+      ? "Ancient Egypt"
+      : "Roman Empire"}
+  </Link>
+</div>
+
+
+
+        <div
+  className="destination-grid"
+  ref={destinationGridRef}
+  onScroll={handleDestinationScroll}
+>
+            <div className="destination-slide">
+  
           <article id="hampi" className="destination-card hampi">
             <p>ANCIENT INDIA</p>
             <h3>Hampi</h3>
@@ -218,11 +447,32 @@ const sendMessage = () => {
       </p>
       <p><strong>Location:</strong> Karnataka, India</p>
       <p><strong>Historical era:</strong> Vijayanagara Empire</p>
+      
+<div className="history-timeline">
+  <h3>📜 A Journey Through Time</h3>
+
+  <div className="timeline-item">
+    <span>14th Century</span>
+    <p>Hampi rises as the capital of the Vijayanagara Empire.</p>
+  </div>
+
+  <div className="timeline-item">
+    <span>16th Century</span>
+    <p>Hampi flourishes as a major centre of trade, art and architecture.</p>
+  </div>
+
+  <div className="timeline-item">
+    <span>1565</span>
+    <p>The city suffers major destruction after the Battle of Talikota.</p>
+  </div>
+</div>
+
     </div>
   </div>
 )}
-
-          <article className="destination-card egypt">
+    </div>
+<div className="destination-slide">
+  <article className="destination-card egypt">
             <p>ANCIENT CIVILIZATION</p>
             <h3>Ancient Egypt</h3>
             <p>Uncover the mysteries of the pyramids.</p>
@@ -246,9 +496,32 @@ const sendMessage = () => {
       </p>
       <p><strong>Location:</strong> Northeastern Africa</p>
       <p><strong>Famous for:</strong> Pyramids of Giza</p>
+      
+<div className="history-timeline">
+  <h3>📜 A Journey Through Time</h3>
+
+  <div className="timeline-item">
+    <span>c. 3100 BCE</span>
+    <p>Upper and Lower Egypt are unified under one ruler.</p>
+  </div>
+
+  <div className="timeline-item">
+    <span>c. 2600 BCE</span>
+    <p>The Old Kingdom flourishes and the great pyramids are built.</p>
+  </div>
+
+  <div className="timeline-item">
+    <span>30 BCE</span>
+    <p>Egypt becomes a province of the Roman Empire after Cleopatra VII's reign.</p>
+  </div>
+</div>
+
     </div>
   </div>
 )}
+  </div>
+<div className="destination-slide">
+
           <article className="destination-card rome">
             <p>CLASSICAL WORLD</p>
             <h3>Roman Empire</h3>
@@ -275,20 +548,91 @@ const sendMessage = () => {
       </p>
       <p><strong>Centre:</strong> Rome, Italy</p>
       <p><strong>Famous for:</strong> The Colosseum and Roman roads</p>
+      
+<div className="history-timeline">
+  <h3>📜 A Journey Through Time</h3>
+
+  <div className="timeline-item">
+    <span>753 BCE</span>
+    <p>According to Roman tradition, the city of Rome is founded.</p>
+  </div>
+
+  <div className="timeline-item">
+    <span>27 BCE</span>
+    <p>Augustus becomes the first Roman emperor.</p>
+  </div>
+
+  <div className="timeline-item">
+    <span>476 CE</span>
+    <p>The Western Roman Empire comes to an end.</p>
+  </div>
+</div>
+
     </div>
   </div>
 )}
-        </div>
+</div>
+</div>
       </section>
 
-      <section id="about" className="about-section">
-        <p>BEYOND THE TEXTBOOK</p>
-        <h2>Not just history. History you can explore.</h2>
-        <p>
-          TIMELOOP connects historical places, timelines, and AI-assisted
-          discovery to help you understand the past and present.
-        </p>
-      </section>
+     
+<section id="about" className="about-section">
+  <div className="about-content">
+    <p className="about-label">✦ BEYOND THE TEXTBOOK</p>
+
+    <h2>
+      The past is full of stories.
+      <br />
+      <span>Let's explore them.</span>
+    </h2>
+
+    <p className="about-description">
+      TIMELOOP is an interactive history exploration platform
+      that brings ancient civilizations, remarkable places, and
+      important historical events closer to today's learners.
+      Discover the past through engaging destination cards,
+      historical timelines, and AI-assisted discovery.
+    </p>
+     
+<div className="about-features">
+  <div className="about-feature">
+    <span className="about-icon">🏛️</span>
+    <h3>Explore Civilizations</h3>
+    <p>
+      Discover the rich history of Hampi, uncover the mysteries
+      of Ancient Egypt, and explore the legacy of the Roman Empire
+      through detailed destination cards and historical facts.
+    </p>
+  </div>
+
+  <div className="about-feature">
+    <span className="about-icon">⌛</span>
+    <h3>Travel Through Time</h3>
+    <p>
+      Follow important historical events through interactive
+      timelines and understand how ancient civilizations,
+      remarkable monuments, and key events shaped our world.
+    </p>
+  </div>
+
+  <div className="about-feature">
+    <span className="about-icon">✦</span>
+    <h3>Discover with AI</h3>
+    <p>
+      Ask History AI questions about the past, explore historical
+      topics through a chat interface, and make learning history
+      more engaging with AI-assisted discovery.
+    </p>
+  </div>
+</div>
+
+
+    <p className="about-footer-text">
+      Explore the Past. Understand the Present.
+    </p>
+  </div>
+</section>
+
 
       <footer>
         <h3>◈ TIMELOOP</h3>
@@ -296,7 +640,18 @@ const sendMessage = () => {
       </footer>
     </div>
     </>
-    )
+  )
+}
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/hampi" element={<Hampi />} />
+        <Route path="/egypt" element={<Egypt />} />
+      <Route path="/rome" element={<Rome />} />
+      <Route path="/login" element={<Login />} />
+    </Routes>
+  )
 }
 
 export default App

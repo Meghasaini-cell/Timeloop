@@ -1,0 +1,345 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #100e12;
+  color: #f8f1e7;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.login-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 42px 9%;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(15, 12, 12, .88), rgba(15, 12, 12, .48)),
+    url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1400&q=85')
+    center/cover;
+}
+
+.login-brand,
+.login-mobile-brand {
+  color: #e5c58c;
+  text-decoration: none;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.login-visual-content {
+  max-width: 500px;
+  margin: 70px 0;
+}
+
+.login-eyebrow {
+  color: #d7b477;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  line-height: 1.8;
+}
+
+.login-visual h1,
+.login-form h2 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+}
+
+.login-visual h1 {
+  margin: 18px 0;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.12;
+}
+
+.login-visual-content > p:not(.login-eyebrow) {
+  max-width: 420px;
+  color: #d1c8bc;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.login-era-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.login-era-tags span {
+  padding: 9px 14px;
+  border: 1px solid rgba(229, 197, 140, .45);
+  border-radius: 30px;
+  color: #f2dfbd;
+  font-size: 12px;
+  background: rgba(20, 15, 15, .35);
+}
+
+.login-footer {
+  color: #b5a794;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.login-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 45px 8%;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-mobile-brand {
+  display: none;
+  margin-bottom: 35px;
+}
+
+.login-form h2 {
+  margin: 12px 0;
+  color: #fff7eb;
+  font-size: clamp(34px, 4vw, 45px);
+}
+
+.login-subtitle {
+  margin-bottom: 32px;
+  color: #a9a0a9;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.login-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+.login-form form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #e9dfd2;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-form input:not([type="checkbox"]) {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px 16px;
+  border: 1px solid #383039;
+  border-radius: 10px;
+  outline: none;
+  background: #1b171e;
+  color: #fff7eb;
+  font: inherit;
+  font-weight: 400;
+  transition: border-color .25s, box-shadow .25s;
+}
+
+.login-form input:not([type="checkbox"]):focus {
+  border-color: #d7b477;
+  box-shadow: 0 0 0 3px rgba(215, 180, 119, .1);
+}
+
+.login-form input::placeholder {
+  color: #766e79;
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: -5px;
+  font-size: 12px;
+}
+
+.remember-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #bdb3c0;
+}
+
+.remember-option input {
+  accent-color: #d7b477;
+}
+
+.forgot-password {
+  color: #e0bd7e;
+}
+
+.login-submit {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(120deg, #e4c58d, #b98b4b);
+  color: #211810;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .25s, box-shadow .25s;
+}
+
+.login-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(185, 139, 75, .2);
+}
+
+.login-switch {
+  margin-top: 28px;
+  color: #aaa0ad;
+  text-align: center;
+  font-size: 13px;
+}
+
+.login-switch button {
+  border: none;
+  background: none;
+  color: #e0bd7e;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-note {
+  margin-top: 35px;
+  color: #746b78;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+@media (max-width: 800px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-visual {
+    display: none;
+  }
+
+  .login-form-side {
+    min-height: 100vh;
+    padding: 35px 24px;
+  }
+
+  .login-mobile-brand {
+    display: inline-block;
+  }
+
+  .login-form {
+    max-width: 440px;
+  }
+}
+.forgot-password-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 4px 0 18px;
+}
+
+.forgot-password-link {
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  color: #b6c99b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  color: #d5e6bd;
+  text-decoration: underline;
+}
+/* Forgot Password Popup */
+.forgot-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+}
+
+.forgot-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 32px;
+  border: 1px solid #383039;
+  border-radius: 18px;
+  background: #1b171e;
+  color: #f8f1e7;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.forgot-modal h2 {
+  margin: 12px 0;
+  color: #fff7eb;
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+}
+
+.forgot-modal > p:not(.login-eyebrow) {
+  margin-bottom: 24px;
+  color: #a9a0a9;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.forgot-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  border: none;
+  background: transparent;
+  color: #f8f1e7;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.forgot-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.forgot-modal form label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #e9dfd2;
+  font-size: 13px;
+}
+
+.forgot-modal form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid #383039;
+  border-radius: 10px;
+  outline: none;
+  background: #100e12;
+  color: #fff7eb;
+  font: inherit;
+}
+
+.forgot-modal form input:focus {
+  border-color: #d7b477;
+}
